@@ -1,0 +1,7 @@
+---
+- hosts: all
+  vars:
+     contents: "{{ lookup('conjur_variable', 'db/password') }}"
+
+  tasks:
+     - debug: msg="the value of db/password {{ contents }}"
