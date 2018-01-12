@@ -3,10 +3,10 @@
 function finish {
   echo 'Removing demo environment'
   echo '---'
-  # restore_conjurrc_and_netrc
-  # docker-compose down -v
+  restore_conjurrc_and_netrc
+  docker-compose down -v
 }
-trap finish EXIT
+# trap finish EXIT
 
 function set_db_password {
   echo '--------- Set Password ------------'
@@ -82,7 +82,7 @@ function generate_tls {
 }
 
 function main {
-  docker-compose up -d conjur client proxy
+  docker-compose up -d conjur client
   sleep 5
 
   api_key=$(docker-compose exec conjur rails r "print Credentials['demo-policy:user:admin'].api_key")
