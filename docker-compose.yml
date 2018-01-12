@@ -15,7 +15,9 @@ services:
 
   client:
     image: conjurinc/cli5
-    depends_on: [ conjur ]
+    depends_on:
+      - conjur
+      - proxy
     entrypoint: sleep
     command: infinity
     environment:
@@ -27,15 +29,20 @@ services:
     volumes:
       - ./policy:/src/policy
 
-  conjur-tls:
-    build:
-      context: .
-      dockerfile: Dockerfile.nginx
-    entrypoint: nginx-debug -g 'daemon off;'
-    environment:
-        TERM: xterm
+  proxy:
+    image: nginx:1.13.6-alpine
     ports:
       - "8443:443"
+    volumes:
+      - ./proxy/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./tls/nginx.key:/etc/nginx/nginx.key:ro
+      - ./tls/nginx.crt:/etc/nginx/nginx.crt:ro
+    depends_on: [ conjur ]
+
+  ansible-python3.6:
+    image: python:3.6
+    volumes:
+      - ../ansible:/src/ansible
     depends_on:
       - conjur
-      - client
+      - proxy

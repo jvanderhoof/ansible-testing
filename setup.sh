@@ -3,8 +3,8 @@
 function finish {
   echo 'Removing demo environment'
   echo '---'
-  restore_conjurrc_and_netrc
-  docker-compose down -v
+  # restore_conjurrc_and_netrc
+  # docker-compose down -v
 }
 trap finish EXIT
 
@@ -34,6 +34,7 @@ function write_netrc {
   echo "machine http://localhost:8080/authn
   login admin
   password $1" >> ~/.netrc
+  chmod og-rw ~/.netrc
 }
 
 function backup_conjurrc_and_netrc {
@@ -66,8 +67,22 @@ function configure_conjur {
   set_db_password $1
 }
 
+function generate_tls {
+  docker run --rm -it \
+       -w /home -v $PWD/tls:/home \
+       svagi/openssl req\
+       -x509 \
+       -nodes \
+       -days 365 \
+       -newkey rsa:2048 \
+       -config /home/tls.conf \
+       -extensions v3_ca \
+       -keyout nginx.key \
+       -out nginx.crt
+}
+
 function main {
-  docker-compose up -d conjur client conjur-tls
+  docker-compose up -d conjur client proxy
   sleep 5
 
   api_key=$(docker-compose exec conjur rails r "print Credentials['demo-policy:user:admin'].api_key")
